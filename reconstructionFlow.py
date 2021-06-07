@@ -13,28 +13,6 @@ READER_PATHS = {
     "disparity_y": f"_train_y_disp.left.scale16.{{width}}.{{height}}.1.char",
 }
 
-# def load_readers(training_outputs_dir, height, width):
-#     reader_filenames = [
-#         os.path.join(training_outputs_dir, f) for reader_name, f in READER_NAMES.items()
-#     ]
-#     for reader_filename in reader_filenames:
-#         assert os.path.exists(reader_filename), reader_filename
-
-#     readers = [
-#         scripts.analysis.image_utils.RawReader(reader_filename)
-#         for reader_filename in reader_filenames
-#     ]
-#     return dict(zip(READER_NAMES.keys(), readers))
-#     data = dict(
-#         [
-#             (reader_name, np.array(reader.get_frames(0, math.inf)))
-#             for reader_name, reader in readers.items()
-#         ]
-#     )
-
-#     exr_util.save(path, img)
-
-
 def get_path(movie, chapter, field, frame_id=None):
     path = pathlib.Path(field) / movie / f"chapter{chapter}"
     if frame_id is None:
