@@ -118,3 +118,35 @@ Please cite our paper if you use this code in your research:
 ## License 
 
 MIT License 
+
+## Formatted Movie Names 
+###train:
+exodus
+transformers
+drive_angry
+nurse
+harold_kumar
+final_destination
+hobbit2
+planet_apes
+wolf
+spiderman
+battle
+stepup3d
+stepup_allin
+pina
+musketeers
+billy_lynn
+xmen
+hugo
+hobbit1
+hellbenders
+musketeers
+
+###validation:
+stepup_rev
+gatsby
+
+###test.txt
+streetdance
+doctor_who

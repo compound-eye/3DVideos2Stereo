@@ -1,5 +1,7 @@
 import os
 import pathlib
+import subprocess
+import logging
 
 import argparse
 import cv2
@@ -9,8 +11,8 @@ import ml.flo_util as flo_util
 import scripts.analysis.image_utils
 
 READER_PATHS = {
-    "disparity_x": f"_train_x_disp.left.scale16.{{width}}.{{height}}.1.short",
-    "disparity_y": f"_train_y_disp.left.scale16.{{width}}.{{height}}.1.char",
+    "disparity_x": f"_x_stereo.left.{{width}}.{{height}}.1.float",
+    "disparity_y": f"_y_stereo.left.{{width}}.{{height}}.1.float",
 }
 
 def get_path(movie, chapter, field, frame_id=None):
@@ -36,7 +38,6 @@ def load_readers(movie, chapter):
     width = dummy_img.shape[1]
     readers_filenames = {
         reader: get_path(movie, chapter, "reconstructions")
-        / "training"
         / reader_path.format(width=width, height=height)
         for reader, reader_path in READER_PATHS.items()
     }
@@ -74,9 +75,31 @@ def run_reconstruction(movie, chapter, ce_repo):
     assert ce_repo.exists()
     reconstruction_path = movies_repo_dir / get_path(movie, chapter, "reconstructions")
     reconstruction_path.mkdir(parents=True, exist_ok=True)
-    command = f"cd {ce_repo}; env/build/reconstruction_batch.sh --movies-base-dir=/host/{movies_repo_dir} --movie={movie} --chapter={chapter} -Snn_settings.check_flow=false -Simage_dim_scale=1 -Sflow_depth=false -Sodometry.method=0 -Snn_settings.type=0 -Sfuse_voxels=false -Straining_min_distance=-1 -Straining_min_interval=1 -Straining_max_interval=1  -Svolumetric_settings.block_store_path=/host/{reconstruction_path}"
-    os.system(command)
-
+    cmd = [
+        "env/build/run.sh",
+        "./build/stereo/save_disparity",
+        "-Simage_dim_scale=1.0",
+        "-Skind=1",
+        f"-Sdir=/host/{reconstruction_path}",
+        f"--movies-base-dir=/host/{movies_repo_dir}",
+        f"--movie={movie}",
+        f"--chapter={chapter}"
+    ]
+    print(' '.join(cmd))
+    p = subprocess.Popen(
+        cmd,
+        cwd=ce_repo,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=False
+    )
+    out, err = p.communicate()
+    ret_code = p.returncode   # ret_code != 0, indicates an error occured in execution.
+    if ret_code:
+        logging.error(err)
+        return False
+    logging.info(out)
+    return True
 
 def write_frame(movie, chapter, frame_id, readers):
     forward_flow_path = get_path(movie, chapter, "flow_forward", frame_id)
