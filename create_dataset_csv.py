@@ -5,10 +5,10 @@ import os
 EXTENSIONS = {
     "image_left": ".jpg",
     "image_right": ".jpg",
-    "forward_flow": ".flo",
-    "backward_flow": ".flo",
-    "disp": ".exr",
-    "uncertainty": ".exr"
+    "flow_forward": ".flo",
+    "flow_backward": ".flo",
+    "disparity": ".png",
+    "uncertainty": ".png"
 }
 
 if __name__ == '__main__':
@@ -25,8 +25,6 @@ if __name__ == '__main__':
         type=str,
         help="path to write csv file",
     )
-
-    PARSER.add_argument("", type=str, help="path to list file")
     ARGS = PARSER.parse_args()
 
     with open(ARGS.list, "r") as f:
@@ -34,7 +32,7 @@ if __name__ == '__main__':
 
     DATASET = [
         {
-            field: f"{field}/{sample}/{ext}"
+            field: f"{field}/{sample}{ext}"
             for field, ext in EXTENSIONS.items()
         } for sample in FILENAMES
     ]
