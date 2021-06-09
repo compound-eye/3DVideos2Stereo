@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     run_reconstruction(args.movie, args.chapter, args.ce_repo)
     num_frames = len(os.listdir(get_path(args.movie, args.chapter, "image_left")))
-    readers = load_readers(args.movie, 10)
+    readers = load_readers(args.movie, args.chapter)
     get_path(args.movie, args.chapter, "flow_forward").mkdir(
         parents=True, exist_ok=True
     )
