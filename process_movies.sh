@@ -1,26 +1,35 @@
 #!/bin/bash
 
+# make sure conda environment is correct
+
 ce_home=$1
-PYTHON="PYTHONPATH=$ce_home python3"
+movie_list_filename=$2
+data_lists=$3
+
+if [ -z "$movie_list_filename" ]
+then
+    movie_list_filename="movie_names.txt"
+    data_lists=(lists/train.txt lists/validation.txt lists/test.txt) 
+fi
 
 while IFS= read -r movie
 do
-    ./run_extractFrames.sh $movie
+    echo "extracting frames for $movie"
+    # ./run_extractFrames.sh $movie
     num_chapters=`ls image_left/$movie | wc -l`
     for chapter in $(seq 1 $num_chapters)
     do
 	echo "processing $movie chapter $chapter"
-	$PYTHON reconstructionFlow.py --movie=$movie --chapter=$chapter --ce_repo=$ce_home
+	# creating dir will also be done in the python script
+	# but its easier to force proper permissions this way
+	mkdir -p reconstructions/$movie/chapter$chapter/
+	chmod -R g+w reconstructions/
+	PYTHONPATH=$ce_home python3 reconstructionFlow.py --movie=$movie --chapter=$chapter --ce_repo=$ce_home
     done
-done < "movie_names.txt"
+done < $movie_list_filename
 
-$PYTHON get_disp_and_uncertainty.py lists/train.txt
-$PYTHON get_disp_and_uncertainty.py lists/validation.txt
-$PYTHON get_disp_and_uncertainty.py lists/test.txt
-
-$PYTHON create_dataset_csv.py lists/train.txt
-$PYTHON create_dataset_csv.py lists/validation.txt
-$PYTHON create_dataset_csv.py lists/test.txt
-
-# $PYTHON get_disp_and_uncertainty.py lists/debug.txt
-# $PYTHON create_dataset_csv.py lists/debug.txt lists/debug.csv
+for data_list in $(data_lists)
+do
+    PYTHONPATH=$ce_home python3 get_disp_and_uncertainty.py $data_list
+    PYTHONPATH=$ce_home python3 create_dataset_csv.py $data_list ${MY_FILE/txt/csv}
+done
