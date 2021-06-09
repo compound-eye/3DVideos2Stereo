@@ -11,13 +11,12 @@ import cv2
 from PIL import PngImagePlugin
 import imageio
 
+import ml.flo_util as flo_util
+
 
 def read_flow(filename):
-    # TODO: Replace with your code to read a flow field
-    u = np.zeros((1880, 800))
-    v = np.zeros((1880, 800))
-
-    return u, v
+    flow = flo_util.readFlow(filename)
+    return flow[:,:,0], flow[:,:,1]
 
 
 def get_disp_and_uncertainty(
