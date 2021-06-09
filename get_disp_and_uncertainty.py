@@ -13,9 +13,11 @@ import imageio
 
 import ml.flo_util as flo_util
 
-
 def read_flow(filename):
+    # TODO: Replace with your code to read a flow field
     flow = flo_util.readFlow(filename)
+    # assert flow.shape[1] == 1880
+    # assert flow.shape[0] == 800
     return flow[:,:,0], flow[:,:,1]
 
 
