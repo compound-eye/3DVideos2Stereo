@@ -1,14 +1,15 @@
 #!/bin/bash
 
-input="mkv_mvc/video1.mkv"
-outputTitle="video1"
-outputFolder="mkv_sbs/${outputTitle}/"
+movie_dir=$1
+movie=$2
+movie_input="$movie_dir/$movie.mkv"
+movie_output="mkv_sbs/${movie}/"
 
-mkdir $outputFolder
+mkdir -p $movie_output
 
-ffmpeg -i ${input} 2>&1 | grep Chapter | grep start | awk '{print $4 $6}' >> ${outputFolder}chapter.txt
+ffmpeg -i ${movie_input} 2>&1 | grep Chapter | grep start | awk '{print $4 $6}' >> ${movie_output}chapter.txt
 
-mkvextract tracks ${input} 0:${input}.264
+mkvextract tracks ${movie_input} 0:${movie_input}.264
 
-wine /home/klasinge/Downloads/FRIM_x86_version_1.29/x86/FRIMDecode32 -i:mvc ${input}.264 -o - -sbs | ffmpeg -y -f rawvideo -s:v 3840x1080 -r 24000/1001 -i - -c:v libx264 ${outputFolder}${outputTitle}.mkv
-rm ${input}.264
+wine /home/vishrut/Downloads/FRIM/x86/FRIMDecode32 -i:mvc ${movie_input}.264 -o - -sbs | ffmpeg -y -f rawvideo -s:v 3840x1080 -r 24000/1001 -i - -c:v libx264 ${movie_output}${movie}.mkv
+rm ${movie_input}.264
