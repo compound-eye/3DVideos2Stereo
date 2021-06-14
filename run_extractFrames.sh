@@ -1,6 +1,8 @@
 #!/bin/bash
 
 video_name=$1
+chapter_list=$2
+
 parent_folder_name="sbs_frames"
 data_path="mkv_sbs/"
 video_filename="${video_name}.mkv"
@@ -11,7 +13,6 @@ output_meta="image_meta/${video_name}/"
 output_frames_raw="image_raw/${video_name}/"
 chapter_file="${video_path}chapter.txt"
 chap_idx="0"
-#
 
 mkdir -p "$video_path"
 mkdir -p "$output_frames_left"
@@ -19,31 +20,25 @@ mkdir -p "$output_frames_right"
 mkdir -p "$output_meta"
 mkdir -p "$output_frames_raw"
 
-# make chapter file if it doesn't already exist
-[ -f "$chapter_file" ] || ffmpeg -i "${video_path}${video_filename}" 2>&1 | grep Chapter | grep start | awk '{print $4 $6}' >> "$chapter_file"
-
 #get cut information
-ffprobe -show_frames -of compact=p=0 -f lavfi "movie=${video_path}${video_filename},select=gt(scene\,0.1)" >> ${output_meta}shots.txt 2>&1 
+ffprobe -show_frames -of compact=p=0 -f lavfi "movie=${video_path}${video_filename},select=gt(scene\,0.1)" >> ${output_meta}shots.txt 2>&1
 
 #per chapter extract raw images (full frame rate, full resolution, no clipping, left and right image combined in one image sbs)
 #additional log info is stored
-while IFS='' read -r line
+for chap_idx in $chapter_list
 do
-	((chap_idx++))
-	startTs=${line%%,*}
-	endTs=${line##*,}
-	duration=$(awk '{print $1-$2-$3}' <<< "$endTs $startTs 0.1")
-	echo "$startTs $endTs $duration"
-	mkdir -p ${output_frames_raw}chapter${chap_idx}/
-	ffmpeg -ss $startTs -i "${video_path}${video_filename}" -to $endTs -copyts -vf showinfo -qscale:v 1 ${output_frames_raw}chapter${chap_idx}/out%08d.jpg </dev/null >> ${output_meta}log${chap_idx}.txt 2>&1
-done < "$chapter_file"
-
+    line=$(sed -n "${chap_idx}p" < $chapter_file)
+    startTs=${line%%,*}
+    endTs=${line##*,}
+    duration=$(awk '{print $1-$2-$3}' <<< "$endTs $startTs 0.1")
+    echo "chapter ${chap_idx}: $startTs $endTs $duration"
+    mkdir -p ${output_frames_raw}chapter${chap_idx}/
+    ffmpeg -ss $startTs -i "${video_path}${video_filename}" -to $endTs -copyts -vf showinfo -qscale:v 1 ${output_frames_raw}chapter${chap_idx}/out%08d.jpg </dev/null >> ${output_meta}log${chap_idx}.txt 2>&1
+done
 # extract clipped left and right images from raw images (clipping is done to remove black borders)
 # see python script for parameters and details
-echo ${output_frames_raw}
 for subfolder in ${output_frames_raw}*/ ; do
 	b_subfolder=$(basename $subfolder)
-	echo $b_subfolder
 	mkdir -p ${output_frames_left}${b_subfolder}/
 	mkdir -p ${output_frames_right}${b_subfolder}/
 	python splitImagesChapters.py --raw ${output_frames_raw}${b_subfolder}/ --outLeft ${output_frames_left}${b_subfolder}/ --outRight ${output_frames_right}${b_subfolder}/ --txtList ${output_meta}${b_subfolder}.txt --paddingAR 280 --paddingAR_side 40

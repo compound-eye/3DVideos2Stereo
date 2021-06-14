@@ -13,17 +13,24 @@ data_lists=$4
 if [ -z "$movie_list_filename" ]
 then
     movie_list_filename="movie_names.txt"
-    data_lists=(lists/train.txt lists/validation.txt lists/test.txt)
+    data_lists="lists/train.txt lists/validation.txt lists/test.txt"
 fi
 
 while IFS= read -r movie
 do
+    # chapter extraction has to be done on original file
+    ffmpeg -i "${movies_dir}/${movie}.mkv" 2>&1 | grep Chapter | grep start | awk '{print $4 $6}' > "mkv_sbs/${movie}/chapter.txt"
+    # delete some lines from the chapter file to avoid doing unnecessary work
+    chapter_list=$(cat $data_lists | sed 's/\/out[0-9]*//' | grep $movie | sed "s/$movie\/chapter//" | uniq | sort -V)
+
     echo "converting $movie to sbs"
     ./convertToSbs.sh $movies_dir $movie
+
     echo "extracting frames for $movie"
-    ./run_extractFrames.sh $movie
+    ./run_extractFrames.sh $movie "$chapter_list"
     num_chapters=`ls image_left/$movie | wc -l`
-    for chapter in $(seq 1 $num_chapters)
+
+    for chapter in $chapter_list
     do
 	echo "processing $movie chapter $chapter"
 	# creating dir will also be done in the python script

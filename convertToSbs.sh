@@ -1,13 +1,14 @@
 #!/bin/bash
 
+# download FRIM:
+# https://forum.doom9.org/showthread.php?t=169651
+
 movie_dir=$1
 movie=$2
 movie_input="$movie_dir/$movie.mkv"
 movie_output="mkv_sbs/${movie}/"
 
 mkdir -p $movie_output
-
-ffmpeg -i ${movie_input} 2>&1 | grep Chapter | grep start | awk '{print $4 $6}' >> ${movie_output}chapter.txt
 
 mkvextract tracks ${movie_input} 0:${movie_input}.264
 
