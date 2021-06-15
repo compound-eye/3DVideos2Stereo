@@ -16,8 +16,8 @@ import ml.flo_util as flo_util
 def read_flow(filename):
     # TODO: Replace with your code to read a flow field
     flow = flo_util.readFlow(filename)
-    # assert flow.shape[1] == 1880
-    # assert flow.shape[0] == 800
+    assert flow.shape[1] == 1880
+    assert flow.shape[0] == 800
     return flow[:,:,0], flow[:,:,1]
 
 
@@ -31,7 +31,6 @@ def get_disp_and_uncertainty(
     range_threshold,
 ):
     for i, filename in enumerate(filenames):
-        print(f"{i + 1} / {len(filenames)}: {filename}")
 
         # read flow
         u_fw, v_fw = read_flow("flow_forward/" + filename + ".flo")

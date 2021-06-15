@@ -74,9 +74,9 @@ def run_reconstruction(movie, chapter, ce_repo):
     ce_repo = pathlib.Path(os.path.realpath(ce_repo))
     assert ce_repo.exists()
     reconstruction_path = movies_repo_dir / get_path(movie, chapter, "reconstructions")
-    reconstruction_path.mkdir(parents=True, exist_ok=True)
+    assert reconstruction_path.exists()
     cmd = [
-        "env/build/run.sh",
+        f"{ce_repo}/env/build/run.sh",
         "./build/stereo/save_disparity",
         "-Simage_dim_scale=1.0",
         "-Skind=1",
@@ -88,7 +88,6 @@ def run_reconstruction(movie, chapter, ce_repo):
     print(' '.join(cmd))
     p = subprocess.Popen(
         cmd,
-        cwd=ce_repo,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         shell=False
@@ -109,7 +108,7 @@ def write_frame(movie, chapter, frame_id, readers):
         reader_name: np.array(reader.get_frames(frame_id, 1))[0]
         for reader_name, reader in readers.items()
     }
-    forward_flow = np.concatenate([-data["disparity_x"], data["disparity_y"]], 2)
+    forward_flow = np.concatenate([-data["disparity_x"], -data["disparity_y"]], 2)
     backward_flow = forward_flow_to_backward_flow(forward_flow)
     flo_util.writeFlow(forward_flow_path, forward_flow)
     flo_util.writeFlow(backward_flow_path, backward_flow)
