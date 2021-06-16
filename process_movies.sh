@@ -22,6 +22,7 @@ fi
 
 while IFS= read -r movie
 do
+    mkdir -p mkv_sbs/${movie}
     # chapter extraction has to be done on original file
     ffmpeg -i "${movies_dir}/${movie}.mkv" 2>&1 | grep Chapter | grep start | awk '{print $4 $6}' > "mkv_sbs/${movie}/chapter.txt"
     chapter_list=$(cat $data_lists | sed 's/\/out[0-9]*//' | grep $movie | sed "s/$movie\/chapter//" | uniq | sort -V)
